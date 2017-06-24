@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Ins Begin of ++ spu -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:minWidth="200dp"
+    android:minHeight="100dp">
+
+    <CheckBox
+        android:id="@+id/all"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="all"
+        android:clickable="true"/>
+
+    <CheckBox
+        android:id="@+id/_2G"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/_2G"
+        android:clickable="true"/>
+
+    <CheckBox
+        android:id="@+id/_2_5G"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/_2.5G"
+        android:clickable="true"/>
+
+    <CheckBox
+        android:id="@+id/_3G"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/_3G"
+        android:clickable="true"/>
+
+    <CheckBox
+        android:id="@+id/_3_5G"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/_3.5G"
+        android:clickable="true"/>
+
+    <CheckBox
+        android:id="@+id/_4G"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/_4G"
+        android:clickable="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/ok"
+        android:text="OK"
+        android:clickable="true"/>
+
+</LinearLayout>
+
+    <!-- Ins End of ++ spu -->

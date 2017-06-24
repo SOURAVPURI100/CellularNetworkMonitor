@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!--<item-->
+        <!--android:id="@+id/action_home"-->
+        <!--android:title="@string/app_menu_home"-->
+        <!--android:icon="@mipmap/ic_action_computer"-->
+        <!--app:showAsAction="ifRoom"/>-->
+    <!--<item-->
+        <!--android:id="@+id/action_mapView"-->
+        <!--android:title="@string/app_menu_mapView"-->
+        <!--android:icon="@mipmap/ic_action_place"-->
+        <!--app:showAsAction="ifRoom"/>-->
+    <!--<item-->
+        <!--android:id="@+id/action_aboutUs"-->
+        <!--android:title="@string/app_menu_aboutUS"-->
+        <!--android:icon="@mipmap/ic_action_about"-->
+        <!--app:showAsAction="ifRoom" />-->
+
+    <item
+        android:id="@+id/settings_option"
+        android:title="@string/settings" />
+
+
+
+</menu>
