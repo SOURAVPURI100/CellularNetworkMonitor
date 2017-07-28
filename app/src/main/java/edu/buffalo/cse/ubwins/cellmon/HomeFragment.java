@@ -66,6 +66,8 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        // retain this fragment
+        setRetainInstance(true); // ++ spu
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

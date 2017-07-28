@@ -58,7 +58,7 @@ public class WeekPickerFragment extends DialogFragment {
         // Get start of week where data was first recorded
         minDate.add(Calendar.DAY_OF_WEEK, minDate.getFirstDayOfWeek() - minDate.get(Calendar.DAY_OF_WEEK));
         // Add a week to have the first full week of data
-        minDate.add(Calendar.DAY_OF_YEAR, 7);
+//        minDate.add(Calendar.DAY_OF_YEAR, 7); -- spu
 
 
         SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy");
@@ -70,7 +70,7 @@ public class WeekPickerFragment extends DialogFragment {
         endWeek.add(Calendar.DAY_OF_WEEK, 6);
 
         int day = beginWeek.get(Calendar.DAY_OF_MONTH);
-        int month = beginWeek.get(Calendar.MONTH);
+        int month = beginWeek.get(Calendar.MONTH) +1;
         int year = beginWeek.get(Calendar.YEAR);
 //        for(int i = 0; i < 104; ++i){
         int i = 0;
@@ -82,7 +82,7 @@ public class WeekPickerFragment extends DialogFragment {
             endWeek.add(Calendar.DAY_OF_YEAR, -7);
 
             day = beginWeek.get(Calendar.DAY_OF_MONTH);
-            month = beginWeek.get(Calendar.MONTH);
+            month = beginWeek.get(Calendar.MONTH) +1;
             year = beginWeek.get(Calendar.YEAR);
         }
 

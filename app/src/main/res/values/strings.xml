@@ -6,7 +6,9 @@
 
     <string name="ok">OK</string>
     <string name="settings">Settings</string>
-    <string name="app_menu_mapView">Map</string>
+    <string name="app_menu_mapSignalView">Map Signal Strength</string> <!-- ++ spu -->
+    <string name="app_menu_UIStatistics">UI Statistics</string> <!-- ++ spu -->
+    <string name="app_menu_mapView">Map Technology</string>
     <string name="app_menu_home">Home</string>
     <string name="app_menu_aboutUS">About Us</string>
 
@@ -22,6 +24,8 @@
     <string-array name="app_actions">
         <item>@string/app_menu_home</item>
         <item>@string/app_menu_mapView</item>
+        <item>@string/app_menu_mapSignalView</item> <!--++ spu -->
+        <item>@string/app_menu_UIStatistics</item> <!--++ spu -->
     </string-array>
     <!-- Ins Begin of ++ spu  -->
     <string name ="_2G">2G</string>

@@ -129,6 +129,7 @@
     <orderEntry type="library" exported="" name="play-services-appinvite-10.2.0" level="project" />
     <orderEntry type="library" exported="" name="firebase-crash-10.2.0" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="multidex-instrumentation-1.0.1" level="project" />
+    <orderEntry type="library" exported="" name="MPAndroidChart-v3.0.2" level="project" />
     <orderEntry type="library" exported="" name="play-services-plus-10.2.0" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-24.0.0" level="project" />
     <orderEntry type="library" exported="" name="design-23.0.1" level="project" />

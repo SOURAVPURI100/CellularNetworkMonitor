@@ -114,6 +114,8 @@ public class MainActivity extends AppCompatActivity implements
     private CharSequence mTitle;
     private CharSequence mDrawerTitle;
     private ActionBarDrawerToggle mDrawerToggle;
+    private static final String TAG_RETAINED_FRAGMENT = "RetainedFragment"; // ++ spu
+    private Fragment fragment; // ++ spu
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -692,25 +694,45 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void selectItem(int position){
-        Fragment fragment;
-        switch (position){
-            case 0:
-                fragment = new HomeFragment();
-                break;
-            case 1:
-                fragment = new MapFragment();
-                break;
-            default:
-                fragment = new HomeFragment();
-        }
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.content_frame, fragment)
-                .commit();
+//        Fragment fragment; -- spu
+        FragmentManager fragmentManager = getFragmentManager(); // ++spu
+        // Ins Begin of ++ spu
+        fragment =  fragmentManager.findFragmentByTag(TAG_RETAINED_FRAGMENT);
 
-        mDrawerList.setItemChecked(position, true);
-        setTitle(actions[position]);
-        mLayout.closeDrawers();
+            // Ins End of ++ spu
+            Bundle args = new Bundle(); // ++ spu
+            switch (position) {
+                case 0:
+                    fragment = new HomeFragment();
+                    break;
+                case 1:
+                    fragment = new MapFragment(); // Technology View 0
+                    // Ins Begin of ++ spu
+                    // Supply index input as an argument.
+                    args.putInt("index", 0);
+                    fragment.setArguments(args);
+                    // Ins End of ++ spu
+                    break;
+                // Ins Begin of ++ spu
+                case 2:
+                    fragment = new MapFragment(); // Signal view 1
+                    // Supply index input as an argument.
+                    args.putInt("index", 1);
+                    fragment.setArguments(args);
+                    break;
+                // Ins End of ++ spu
+                default:
+                    fragment = new HomeFragment();
+            }
+//        FragmentManager fragmentManager = getFragmentManager(); // --spu
+            fragmentManager.beginTransaction()
+//                .replace(R.id.content_frame, fragment) -- spu
+                    .replace(R.id.content_frame, fragment, TAG_RETAINED_FRAGMENT) //++ spu
+                    .commit();
+
+            mDrawerList.setItemChecked(position, true);
+            setTitle(actions[position]);
+            mLayout.closeDrawers();
     }
 
     @Override

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Path;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.DatePicker;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -60,6 +62,7 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -72,6 +75,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import javax.crypto.BadPaddingException;
+
 import static android.R.attr.data;
 import static android.R.attr.fragment;
 import static android.os.Build.VERSION_CODES.M;
@@ -81,6 +86,7 @@ import static edu.buffalo.cse.ubwins.cellmon.LocationFinder.longitude;
 
 /**
  * Created by pcoonan on 3/15/17.
+ * Edited by Sourav Puri
  */
 
 public class MapFragment extends Fragment implements DateSelectedListener,
@@ -108,10 +114,17 @@ public class MapFragment extends Fragment implements DateSelectedListener,
     private Map<String, Boolean> mapNetworkDialog = new HashMap<>();
     private Map<Integer, String> mapNetwork = new HashMap<>();
     private NetworkSelect netSelect;
+    private SignalHeatMap signalHeatMap;
+    private TextView mapDate = null;
+    private int mapView = 0; // For technology // 1 for signal
+    private String dateType = "";
+    private String dateValue= "";
     // Ins End of ++ spu
+
     public MapFragment(){
         setHasOptionsMenu(true);
     }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -124,12 +137,27 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         netSelect = NetworkSelect.newInstance("Network");
         netSelect.setTargetFragment(MapFragment.this, 0);
         netSelect.setCancelable(true);
-        // Ins Begin of ++ spu
+        signalHeatMap = new SignalHeatMap();
+        // Get the Map View Signal or Technology
+        Bundle args = getArguments();
+        mapView = args.getInt("index");
+        // retain this fragment
+        setRetainInstance(true);
+        // Ins End of ++ spu
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.location_fragment, container, false);
 
+        // Ins Begin of ++ spu
+        // Adding legend text below
+        mapDate = (TextView) rootView.findViewById(R.id.detailTitle);
+
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
+        mapDate.setText("Day " + df.format(c.getTime()));
+
+        // Ins End of ++ spu
         mMapView = (MapView) rootView.findViewById(R.id.mapView);
         mMapView.onCreate(savedInstanceState);
 
@@ -147,8 +175,14 @@ public class MapFragment extends Fragment implements DateSelectedListener,
                 googleMap = mMap;
 //              refreshMap(null); -- spu
                 // Ins Begin of ++ spu
-                refreshMap(null, (mapNetworkDialog.containsKey(_all_)
+                if(mapView == 0)
+                    refreshMap(null, (mapNetworkDialog.containsKey(_all_)
                         && mapNetworkDialog.get(_all_)));
+                else
+                    refreshSignalMap(null, (mapNetworkDialog.containsKey(_all_)
+                            && mapNetworkDialog.get(_all_)));
+
+
                 // Ins End of ++ spu
             }
         });
@@ -231,6 +265,12 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         Calendar minDate = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        // Ins Begin of ++ spu
+        dateType = type;
+        dateValue = value;
+        // Ins End of ++ spu
+
         try{
             minDate.setTime(sdf.parse(value));
         }
@@ -255,7 +295,11 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         mapNetworkDialog.put(_3_5G_, _3_5G);
         mapNetworkDialog.put(_4G_, _4G);
 
-        refreshMap(entryListGlobal, mapNetworkDialog.get(_all_));
+        if(mapView == 0){
+            refreshMap(entryListGlobal, mapNetworkDialog.get(_all_));
+        }
+        else
+            refreshSignalMap(entryListGlobal, mapNetworkDialog.get(_all_));
 
     }
 //    Filter entries based on Network hash map
@@ -325,9 +369,9 @@ public class MapFragment extends Fragment implements DateSelectedListener,
                 new ClusterManager<Entry>(getActivity().getApplicationContext(), googleMap);
         // For dropping a marker at a point on the Map
         double lat = (ForegroundService.FusedApiLatitude != null) ?
-                ForegroundService.FusedApiLatitude : -34;
+                ForegroundService.FusedApiLatitude : 42.953431;
         double lon = (ForegroundService.FusedApiLongitude != null) ?
-                ForegroundService.FusedApiLongitude : 151;
+                ForegroundService.FusedApiLongitude : -78.818229;
         LatLng curLoc = new LatLng(lat, lon);
         double latAvg = 0;
         double longAvg = 0;
@@ -366,40 +410,46 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         //   - Filter out stale entries
         //   - Adjust map zoom to contain all points/clusters (sometimes zooms in too much)
 
-        if(entries == null){
-            String rawQuery = "SELECT * FROM mapRecords";
-            DBHandler dbHandler = new DBHandler(getActivity().getApplicationContext());
-            SQLiteDatabase sqLiteDatabase = dbHandler.getWritableDatabase();
-            Cursor cur = sqLiteDatabase.rawQuery(rawQuery, null);
+//        if(entries == null){ // -- spu
+        if(entries == null || entries.size() == 0){ //++ spu
+            if(entries != null  && entries.size() == 0)
+                Toast.makeText(getActivity().getApplicationContext(), "No Data Available", Toast.LENGTH_SHORT).show();
+            // Del Begin of ++ spu
+//            String rawQuery = "SELECT * FROM mapRecords";
+//            DBHandler dbHandler = new DBHandler(getActivity().getApplicationContext());
+//            SQLiteDatabase sqLiteDatabase = dbHandler.getWritableDatabase();
+//            Cursor cur = sqLiteDatabase.rawQuery(rawQuery, null);
+//
+//
+//            double count = DatabaseUtils.queryNumEntries(sqLiteDatabase, "mapRecords");
+//
+//            if(cur.moveToFirst()){
+//                do{
+//                    LatLng temp = new LatLng(cur.getDouble(1), cur.getDouble(2));
+//                    latAvg += (cur.getDouble(1) / count);
+//                    longAvg += (cur.getDouble(2) / count);
+//
+////                        Log.d("LOCDB", "Lat is: " + cur.getDouble(1));
+////                        Log.d("LOCDB", "Long is: " + cur.getDouble(2));
+//                    googleMap.addMarker(
+//                            new MarkerOptions()
+//                                    .position(temp)
+//                                    .title(networkTypeMap[cur.getInt(5)])
+//                                    .snippet(cur.getInt(11) + " dBm")
+//                                    .icon(BitmapDescriptorFactory.
+//                                            defaultMarker(colorMap[cur.getInt(12)])));
+//
+//
+//                }
+//                while(cur.moveToNext());
+//            }
+//            else{
+//                googleMap.addMarker(new MarkerOptions().position(curLoc).title("Current Location").snippet("No data"));
+//            }
+//            cur.close();
+//            sqLiteDatabase.close();
 
-
-            double count = DatabaseUtils.queryNumEntries(sqLiteDatabase, "mapRecords");
-
-            if(cur.moveToFirst()){
-                do{
-                    LatLng temp = new LatLng(cur.getDouble(1), cur.getDouble(2));
-                    latAvg += (cur.getDouble(1) / count);
-                    longAvg += (cur.getDouble(2) / count);
-
-//                        Log.d("LOCDB", "Lat is: " + cur.getDouble(1));
-//                        Log.d("LOCDB", "Long is: " + cur.getDouble(2));
-                    googleMap.addMarker(
-                            new MarkerOptions()
-                                    .position(temp)
-                                    .title(networkTypeMap[cur.getInt(5)])
-                                    .snippet(cur.getInt(11) + " dBm")
-                                    .icon(BitmapDescriptorFactory.
-                                            defaultMarker(colorMap[cur.getInt(12)])));
-
-
-                }
-                while(cur.moveToNext());
-            }
-            else{
-                googleMap.addMarker(new MarkerOptions().position(curLoc).title("Current Location").snippet("No data"));
-            }
-            cur.close();
-            sqLiteDatabase.close();
+            // Del End of ++ spu
         }
         else{
             // Custom cluster method - currently not working correctly
@@ -437,19 +487,129 @@ public class MapFragment extends Fragment implements DateSelectedListener,
 //                                        defaultMarker(colorMap[e.signalLevel])));
             }
 
-            clusterManager.setAnimation(false); // ++ spu
+            //clusterManager.setAnimation(false); // ++ spu
 
             // Only needed for Cluster Manager
             googleMap.setOnCameraIdleListener(clusterManager);
             googleMap.setOnMarkerClickListener(clusterManager);
         }
 
-
+        clusterManager.cluster(); //++ spu
         if(latAvg != 0 && longAvg != 0) curLoc = new LatLng(latAvg, longAvg);
         // For zooming automatically to the location of the marker
         CameraPosition cameraPosition = new CameraPosition.Builder().target(curLoc).zoom(15).build();
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+        // Ins begin of ++ spu
+        // Fill date on bottom map view
+        if(dateType.equals("day")){
+            mapDate.setText("Day "+dateValue);
+        }
+        else if(dateType.equals("week")) {
+            mapDate.setText("Week " + dateValue);
+        }
+        else if(dateType.equals("month")) {
+            String str[] = dateValue.split("/");
+            int month = Integer.parseInt(str[0]);
+            mapDate.setText("Month " + new DateFormatSymbols().getMonths()[month-1]);
+        }
+        // Ins End of ++ spu
     }
+
+
+    // Ins Begin of ++ spu
+    private void refreshSignalMap(ArrayList<Entry> entries, boolean allFilter){
+        googleMap.clear();
+
+//      Filter entries based on Network hash map
+        if(entries != null && allFilter == false) {
+            entries = filterNetworkEntries(entries);
+        }
+
+        // For showing a move to my location button
+        googleMap.setMyLocationEnabled(true);
+        // For dropping a marker at a point on the Map
+        double lat = (ForegroundService.FusedApiLatitude != null) ?
+                ForegroundService.FusedApiLatitude : 42.953431;
+        double lon = (ForegroundService.FusedApiLongitude != null) ?
+                ForegroundService.FusedApiLongitude : -78.818229;
+        LatLng curLoc = new LatLng(lat, lon);
+        double latAvg = 0;
+        double longAvg = 0;
+
+//        if(entries == null){ -- spu
+            if(entries == null || entries.size() == 0){ //++ spu
+                if(entries != null && entries.size() == 0)
+                    Toast.makeText(getActivity().getApplicationContext(), "No Data Available", Toast.LENGTH_SHORT).show();
+            // Del Begin of ++ spu
+//            String rawQuery = "SELECT * FROM mapRecords";
+//            DBHandler dbHandler = new DBHandler(getActivity().getApplicationContext());
+//            SQLiteDatabase sqLiteDatabase = dbHandler.getWritableDatabase();
+//            Cursor cur = sqLiteDatabase.rawQuery(rawQuery, null);
+//
+//
+//            double count = DatabaseUtils.queryNumEntries(sqLiteDatabase, "mapRecords");
+//
+//            if(cur.moveToFirst()){
+//                do{
+//                    LatLng temp = new LatLng(cur.getDouble(1), cur.getDouble(2));
+//                    latAvg += (cur.getDouble(1) / count);
+//                    longAvg += (cur.getDouble(2) / count);
+//                    googleMap.addMarker(
+//                            new MarkerOptions()
+//                                    .position(temp)
+//                                    .title(networkTypeMap[cur.getInt(5)])
+//                                    .snippet(cur.getInt(11) + " dBm")
+//                                    .icon(BitmapDescriptorFactory.
+//                                            defaultMarker(colorMap[cur.getInt(12)])));
+//
+//
+//                }
+//                while(cur.moveToNext());
+//            }
+//            else{
+//                googleMap.addMarker(new MarkerOptions().position(curLoc).title("Current Location").snippet("No data"));
+//            }
+//            cur.close();
+//            sqLiteDatabase.close();
+              // Del End of ++ spu
+        }
+        else{
+            for(Entry e: entries){
+//                LatLng temp = new LatLng(e.coordinate.getLatitude(), e.coordinate.getLongitude());
+                latAvg += (e.coordinate.getLatitude() / entries.size());
+                longAvg += (e.coordinate.getLongitude() / entries.size());
+
+            }
+            // Adding functionality for HeatMaps
+                signalHeatMap = new SignalHeatMap();
+                signalHeatMap.buildHeatMap(entries, googleMap);
+
+        }
+
+
+        if(latAvg != 0 && longAvg != 0) curLoc = new LatLng(latAvg, longAvg);
+        // For zooming automatically to the location of the marker
+        CameraPosition cameraPosition = new CameraPosition.Builder().target(curLoc).zoom(12).build();
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        // Ins begin of ++ spu
+        // Fill date on bottom map view
+        if(dateType.equals("day")){
+            mapDate.setText("Day "+dateValue);
+        }
+        else if(dateType.equals("week")) {
+            mapDate.setText("Week " + dateValue);
+        }
+        else if(dateType.equals("month")) {
+            String str[] = dateValue.split("/");
+            int month = Integer.parseInt(str[0]);
+            mapDate.setText("Month " + new DateFormatSymbols().getMonths()[month-1]);
+        }
+        // Ins End of ++ spu
+    }
+
+    // Ins End of ++ spu
+
 
     private ArrayList<Cluster> init(List<Entry> entries, int numClusters){
         Log.d(TAG, "Intitializing K-means");
@@ -707,17 +867,37 @@ public class MapFragment extends Fragment implements DateSelectedListener,
                 JSONObject jsonObject = new JSONObject(responseStr);
                 String status = jsonObject.getString("status");
                 if(status.equals("SUCCESS")){
-                    JSONObject data = jsonObject.getJSONObject("data");
-                    JSONArray entries = data.getJSONArray("entries");
-                    Log.d(TAG, entries.length() + " entries for selected timeframe");
-                    for(int i = 0; i < entries.length(); ++i){
-                        JSONObject jsonentry = entries.getJSONObject(i);
-//                    Log.d(TAG, entry.toString());
-                        Entry entry = Entry.mapJSON(jsonentry);
-                        entryList.add(entry);
+//                  Ins Begin of ++ spu
+                    if(timespan.equals("week") || timespan.equals("month")){
+                        fillEntriesData(jsonObject, entryList);
                     }
-                    ret = true;
+                    else{
+                        JSONObject data = jsonObject.getJSONObject("data");
+                        JSONArray entries = data.getJSONArray("entries");
+                        Log.d(TAG, entries.length() + " entries for selected timeframe");
+                        for(int i = 0; i < entries.length(); ++i){
+                            JSONObject jsonentry = entries.getJSONObject(i);
+                            Entry entry = Entry.mapJSON(jsonentry);
+                            entryList.add(entry);
+                        }
+                    }
+
+//                  Ins End of ++ spu
+
+                    // Del Begin of ++ spu
+//                    JSONObject data = jsonObject.getJSONObject("data");
+//                    JSONArray entries = data.getJSONArray("entries");
+//                    Log.d(TAG, entries.length() + " entries for selected timeframe");
+//                    for(int i = 0; i < entries.length(); ++i){
+//                        JSONObject jsonentry = entries.getJSONObject(i);
+////                    Log.d(TAG, entry.toString());
+//                        Entry entry = Entry.mapJSON(jsonentry);
+//                        entryList.add(entry);
+//                    }
+                    // Del End of ++ spu
+                    // ret = true; -- spu
                 }
+                ret = true;  // ++ spu
 
             } catch (URISyntaxException | IOException | JSONException e) {
                 e.printStackTrace();
@@ -731,8 +911,13 @@ public class MapFragment extends Fragment implements DateSelectedListener,
                 // Ins Begin of ++ spu
                 entryListGlobal = entryList;
                 // added "all" network filter
-                refreshMap(entryList,(mapNetworkDialog.containsKey(_all_)
+
+                if(mapView == 0)
+                    refreshMap(entryList,(mapNetworkDialog.containsKey(_all_)
                         && mapNetworkDialog.get(_all_)));
+                else
+                    refreshSignalMap(entryList,(mapNetworkDialog.containsKey(_all_)
+                            && mapNetworkDialog.get(_all_)));
                 // Ins End of ++ spu
 //                refreshMap(entryList); -- spu
 
@@ -801,30 +986,19 @@ public class MapFragment extends Fragment implements DateSelectedListener,
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
-
-        return true;
+        return false; // Return false to show info window on cluster
+//        return true;
     }
 
     @Override
     public void onClusterInfoWindowClick(com.google.maps.android.clustering.Cluster<Entry> cluster) {
         // Does nothing, but you could go to a list of the users.
-        long avg_dbm = 0;
-        int count = 0;
-        Iterator<Entry> itr = cluster.getItems().iterator();
-
-        while(itr.hasNext()){
-            avg_dbm += itr.next().dbm;
-            count++;
-        }
-
-        avg_dbm = avg_dbm / count;
-        Toast.makeText(getActivity().getApplicationContext(), avg_dbm+"onCIWC", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public boolean onClusterItemClick(Entry item) {
         // Does nothing, but you could go into the user's profile page, for example.
-
+        Toast.makeText(getActivity().getApplicationContext(), "dBm  "+item.dbm, Toast.LENGTH_SHORT).show();
         return false;
     }
 
@@ -833,5 +1007,24 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         // Does nothing, but you could go into the user's profile page, for example.
     }
 
+    public void fillEntriesData(JSONObject jsonObject, ArrayList<Entry> entryList){
+        try{
+            JSONArray data = jsonObject.getJSONArray("data");
+            for(int i=0; i<data.length(); i++){
+                JSONArray entries = data.getJSONArray(i);
+
+                for(int j =0; j<entries.length(); j++){
+                    JSONObject jsonentry = entries.getJSONObject(j);
+                    Entry entry = Entry.mapJSON(jsonentry);
+                    entryList.add(entry);
+                }
+            }
+
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
     // Ins End of ++ spu
 }

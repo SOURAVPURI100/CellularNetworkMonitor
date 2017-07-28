@@ -49,25 +49,25 @@ public class MonthPickerFragment extends DialogFragment {
         minDate.setTimeInMillis(mindate);
 
         // Add a month to have the first full month of data
-        minDate.add(Calendar.MONTH, 1);
+//        minDate.add(Calendar.MONTH, 1); -- spu
         minDate.set(Calendar.DAY_OF_MONTH, 1);
 
         Calendar maxDate = Calendar.getInstance();
-        maxDate.add(Calendar.DATE, -2);
-        maxDate.add(Calendar.MONTH, -1);
+//        maxDate.add(Calendar.DATE, -2); -- spu
+//        maxDate.add(Calendar.MONTH, -1); -- spu
         ArrayList<String> monthList = new ArrayList<String>();
 
-        int month = maxDate.get(Calendar.MONTH);
+        int month = maxDate.get(Calendar.MONTH) +1;
         int year = maxDate.get(Calendar.YEAR);
         int i = 0;
 //        for(int i = 0; i < 24; ++i){
         while(maxDate.after(minDate)){
-            monthList.add(months[month] + " " + year);
+            monthList.add(months[month -1] + " " + year);
             monthMap.put(i, month + "/01/" + year);
             i++;
             maxDate.add(Calendar.MONTH, -1);
 
-            month = maxDate.get(Calendar.MONTH);
+            month = maxDate.get(Calendar.MONTH) +1;
             year = maxDate.get(Calendar.YEAR);
         }
 

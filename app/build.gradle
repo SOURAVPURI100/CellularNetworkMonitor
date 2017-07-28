@@ -14,7 +14,7 @@ android {
     useLibrary 'org.apache.http.legacy'
     defaultConfig {
         applicationId "edu.buffalo.cse.ubwins.cellmon"
-        minSdkVersion 18
+        minSdkVersion 19
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
@@ -40,6 +40,8 @@ dependencies {
     compile 'com.pushlink:pushlink-android:5.5.0'
     compile 'com.facebook.stetho:stetho:1.4.2'
     compile 'com.google.maps.android:android-maps-utils:0.5+'
+    compile 'com.github.PhilJay:MPAndroidChart:v3.0.2'
+
 }
 
 protobuf {
