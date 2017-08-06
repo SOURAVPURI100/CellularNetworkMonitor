@@ -27,6 +27,7 @@ import android.widget.DatePicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -41,10 +42,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -56,6 +59,7 @@ import org.json.JSONObject;
 import org.json.JSONStringer;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -74,6 +78,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+
+// Ins Begin of ++ spu
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+
+// Ins End of ++ spu
 
 import javax.crypto.BadPaddingException;
 
@@ -104,12 +116,11 @@ public class MapFragment extends Fragment implements DateSelectedListener,
     private String[] networkTypeMap = {"GSM", "CDMA", "LTE", "WCDMA"};
     private Long mindate;
     // Ins Begin of ++ spu
-    private ArrayList<Entry> entryListGlobal;
+    public ArrayList<Entry> entryListGlobal;
     private final String _all_ = "all";
     private final String _2G_ = "_2G";
     private final String _2_5G_ = "_2_5G";
     private final String _3G_ = "_3G";
-    private final String _3_5G_ = "_3_5G";
     private final String _4G_ = "_4G";
     private Map<String, Boolean> mapNetworkDialog = new HashMap<>();
     private Map<Integer, String> mapNetwork = new HashMap<>();
@@ -120,6 +131,7 @@ public class MapFragment extends Fragment implements DateSelectedListener,
     private String dateType = "";
     private String dateValue = "";
     private MinDateTask minDateTask;
+    private GetJSONTask getJSONTask;
     // Ins End of ++ spu
 
     public MapFragment() {
@@ -180,11 +192,9 @@ public class MapFragment extends Fragment implements DateSelectedListener,
 //              refreshMap(null); -- spu
                 // Ins Begin of ++ spu
                 if (mapView == 0)
-                    refreshMap(null, (mapNetworkDialog.containsKey(_all_)
-                            && mapNetworkDialog.get(_all_)));
+                    refreshMap(null);
                 else
-                    refreshSignalMap(null, (mapNetworkDialog.containsKey(_all_)
-                            && mapNetworkDialog.get(_all_)));
+                    refreshSignalMap(null);
 
 
                 // Ins End of ++ spu
@@ -287,7 +297,11 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         }
         Log.d(TAG, "Time is: " + minDate.getTimeInMillis());
         value = String.valueOf(minDate.getTimeInMillis());
-        new GetJSONTask().execute(type, value);
+//        new GetJSONTask().execute(type, value); -- spu
+//        Ins Begin of ++ spu
+        getJSONTask = new GetJSONTask(getActivity(), MapFragment.this);
+        getJSONTask.execute(type, value, mapView+"");
+//        Ins End of ++ spu
 //        refreshMap();
     }
 
@@ -295,19 +309,18 @@ public class MapFragment extends Fragment implements DateSelectedListener,
     @Override
     //
     public void onFinishNetworkDialog(boolean all, boolean _2G, boolean _2_5G, boolean _3G,
-                                      boolean _3_5G, boolean _4G) {
+                                      boolean _4G) {
         // Update global network hashmap
         mapNetworkDialog.put(_all_, all);
         mapNetworkDialog.put(_2G_, _2G);
         mapNetworkDialog.put(_2_5G_, _2_5G);
         mapNetworkDialog.put(_3G_, _3G);
-        mapNetworkDialog.put(_3_5G_, _3_5G);
         mapNetworkDialog.put(_4G_, _4G);
 
         if (mapView == 0) {
-            refreshMap(entryListGlobal, mapNetworkDialog.get(_all_));
+            refreshMap(entryListGlobal);
         } else
-            refreshSignalMap(entryListGlobal, mapNetworkDialog.get(_all_));
+            refreshSignalMap(entryListGlobal);
 
     }
 
@@ -335,9 +348,9 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         mapNetwork.put(1, _2_5G_);
         mapNetwork.put(2, _2_5G_);
         mapNetwork.put(3, _3G_);
-        mapNetwork.put(4, _3_5G_);
-        mapNetwork.put(5, _3_5G_);
-        mapNetwork.put(6, _3_5G_);
+        mapNetwork.put(4, _3G_);
+        mapNetwork.put(5, _3G_);
+        mapNetwork.put(6, _3G_);
         mapNetwork.put(7, _2G_);
         mapNetwork.put(8, _3G_);
         mapNetwork.put(9, _3G_);
@@ -346,7 +359,7 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         mapNetwork.put(12, _2G_);
         mapNetwork.put(13, _4G_);
         mapNetwork.put(14, _3G_);
-        mapNetwork.put(15, _3_5G_);
+        mapNetwork.put(15, _3G_);
         mapNetwork.put(16, _2G_);
         mapNetwork.put(17, _3G_);
         mapNetwork.put(18, _3G_);
@@ -357,16 +370,17 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         mapNetworkDialog.put(_2G_, true);
         mapNetworkDialog.put(_2_5G_, true);
         mapNetworkDialog.put(_3G_, true);
-        mapNetworkDialog.put(_3_5G_, true);
         mapNetworkDialog.put(_4G_, true);
     }
 
     // Ins End of ++ spu
 //    private void refreshMap(ArrayList<Entry> entries){ // -- spu
-    private void refreshMap(ArrayList<Entry> entries, boolean allFilter) { //++ spu added "all" filter
+    public void refreshMap(ArrayList<Entry> entries) { //++ spu added "all" filter
         googleMap.clear();
 
         // Ins Begin of ++ spu
+        boolean allFilter = mapNetworkDialog.containsKey(_all_)
+                && mapNetworkDialog.get(_all_);
 //      Filter entries based on Network hash map
         if (entries != null && allFilter == false) {
             entries = filterNetworkEntries(entries);
@@ -525,9 +539,11 @@ public class MapFragment extends Fragment implements DateSelectedListener,
 
 
     // Ins Begin of ++ spu
-    private void refreshSignalMap(ArrayList<Entry> entries, boolean allFilter) {
+    public void refreshSignalMap(ArrayList<Entry> entries) {
         googleMap.clear();
 
+        boolean allFilter = mapNetworkDialog.containsKey(_all_)
+                && mapNetworkDialog.get(_all_);
 //      Filter entries based on Network hash map
         if (entries != null && allFilter == false) {
             entries = filterNetworkEntries(entries);
@@ -825,113 +841,143 @@ public class MapFragment extends Fragment implements DateSelectedListener,
 //    }
 
     // Del End of ++ spu
-    class GetJSONTask extends AsyncTask<String, Void, Boolean> {
-        private ArrayList<Entry> entryList;
-
-        public GetJSONTask() {
-            entryList = new ArrayList<Entry>();
-        }
-
-        @Override
-        protected Boolean doInBackground(String... strings) {
-            String timespan = strings[0];
-            String timestart = strings[1];
-            Boolean ret = false;
-
-            String IMEI_HASH = "";
-            String responseStr = "";
-            try {
-             /*HASH IMEI*/
-                IMEI_HASH = genHash(getIMEI());
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            }
-            HttpResponse response = null;
-            try {
-                HttpClient client = new DefaultHttpClient();
-                HttpGet request = new HttpGet();
-//                String customURL = "http://104.196.177.7/aggregator/genjson?imei_hash="
-//                        + URLEncoder.encode(IMEI_HASH, "UTF-8");
-                String customURL = "http://104.196.177.7/aggregator/genjson?";
-                List<NameValuePair> params = new LinkedList<NameValuePair>();
-                params.add(new BasicNameValuePair("imei_hash", IMEI_HASH));
-                params.add(new BasicNameValuePair("timespan", timespan));
-                params.add(new BasicNameValuePair("timestart", timestart));
-                String paramString = URLEncodedUtils.format(params, "utf-8");
-
-                customURL += paramString;
-
-//                Log.d(TAG, customURL);
-                request.setURI(new URI(customURL));
-                response = client.execute(request);
-
-                responseStr = EntityUtils.toString(response.getEntity());
-                Log.v(TAG, "JSON received.");
 
 
-                /*PARSE JSON RESPONSE*/
-                JSONObject jsonObject = new JSONObject(responseStr);
-                String status = jsonObject.getString("status");
-                if (status.equals("SUCCESS")) {
-//                  Ins Begin of ++ spu
-                    if (timespan.equals("week") || timespan.equals("month")) {
-                        fillEntriesData(jsonObject, entryList);
-                    } else {
-                        JSONObject data = jsonObject.getJSONObject("data");
-                        JSONArray entries = data.getJSONArray("entries");
-                        Log.d(TAG, entries.length() + " entries for selected timeframe");
-                        for (int i = 0; i < entries.length(); ++i) {
-                            JSONObject jsonentry = entries.getJSONObject(i);
-                            Entry entry = Entry.mapJSON(jsonentry);
-                            entryList.add(entry);
-                        }
-                    }
+    // Del Begin of  ++ spu
 
-//                  Ins End of ++ spu
+//    class GetJSONTask extends AsyncTask<String, Void, Boolean> {
+//        private ArrayList<Entry> entryList;
+//
+//        public GetJSONTask() {
+//            entryList = new ArrayList<Entry>();
+//        }
+//
+//        @Override
+//        protected Boolean doInBackground(String... strings) {
+//            String timespan = strings[0];
+//            String timestart = strings[1];
+//            Boolean ret = false;
+//
+//            String IMEI_HASH = "";
+//            String responseStr = "";
+//            try {
+//             /*HASH IMEI*/
+//                IMEI_HASH = genHash(getIMEI());
+//            } catch (NoSuchAlgorithmException e) {
+//                e.printStackTrace();
+//            }
+//            HttpResponse response = null;
+//            try {
+//                HttpClient client = new DefaultHttpClient();
+//                HttpGet request = new HttpGet();
+////                String customURL = "http://104.196.177.7/aggregator/genjson?imei_hash="
+////                        + URLEncoder.encode(IMEI_HASH, "UTF-8");
+//                String customURL = "http://104.196.177.7/aggregator/genjson?";
+//                List<NameValuePair> params = new LinkedList<NameValuePair>();
+//                params.add(new BasicNameValuePair("imei_hash", IMEI_HASH));
+//                params.add(new BasicNameValuePair("timespan", timespan));
+//                params.add(new BasicNameValuePair("timestart", timestart));
+//                String paramString = URLEncodedUtils.format(params, "utf-8");
+//
+//                customURL += paramString;
+//
+////                Log.d(TAG, customURL);
+//                request.setURI(new URI(customURL));
+//                response = client.execute(request);
+//
+//// Ins Begin of spu
+//                HttpEntity entity = response.getEntity();
+//                InputStream inputStream =  entity.getContent();
+//                //create JsonParser object
+//                ObjectMapper mapper = new ObjectMapper();
+//                JsonParser jsonParser = mapper.getFactory().createParser(inputStream);
+//
+////                JsonToken token = jsonParser.nextToken();
+////                if(token == null || !token.equals("status")){
+////                    return false;
+////                }
+////                token = jsonParser.nextToken();
+////                if(!token.equals("SUCCESS")){
+////                    return false;
+////                }
+//
+//                buildEntriesData(jsonParser, entryList);
+//
+//// Ins End of spu
+//
+//// Del Begin of spu
+//
+////                responseStr = EntityUtils.toString(response.getEntity());
+////                Log.v(TAG, "JSON received.");
+////
+////
+////                /*PARSE JSON RESPONSE*/
+////                JSONObject jsonObject = new JSONObject(responseStr);
+////                String status = jsonObject.getString("status");
+////                if (status.equals("SUCCESS")) {
+//////                  Ins Begin of ++ spu
+////                    if (timespan.equals("week") || timespan.equals("month")) {
+////                        fillEntriesData(jsonObject, entryList);
+////                    } else {
+////                        JSONObject data = jsonObject.getJSONObject("data");
+////                        JSONArray entries = data.getJSONArray("entries");
+////                        Log.d(TAG, entries.length() + " entries for selected timeframe");
+////                        for (int i = 0; i < entries.length(); ++i) {
+////                            JSONObject jsonentry = entries.getJSONObject(i);
+////                            Entry entry = Entry.mapJSON(jsonentry);
+////                            entryList.add(entry);
+////                        }
+////                    }
+////
+//////                  Ins End of ++ spu
+////
+////                    // Del Begin of ++ spu
+//////                    JSONObject data = jsonObject.getJSONObject("data");
+//////                    JSONArray entries = data.getJSONArray("entries");
+//////                    Log.d(TAG, entries.length() + " entries for selected timeframe");
+//////                    for(int i = 0; i < entries.length(); ++i){
+//////                        JSONObject jsonentry = entries.getJSONObject(i);
+////////                    Log.d(TAG, entry.toString());
+//////                        Entry entry = Entry.mapJSON(jsonentry);
+//////                        entryList.add(entry);
+//////                    }
+////                    // Del End of ++ spu
+////                    // ret = true; -- spu
+////                }
+//
+//// Del End of spu
+//                ret = true;  // ++ spu
+//
+//            } catch (URISyntaxException | IOException e) {
+//                e.printStackTrace();
+//            }
+//            return ret;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Boolean b) {
+//            if (b) {
+//                // Ins Begin of ++ spu
+//                entryListGlobal = entryList;
+//                // added "all" network filter
+//
+//                if (mapView == 0)
+//                    refreshMap(entryList, (mapNetworkDialog.containsKey(_all_)
+//                            && mapNetworkDialog.get(_all_)));
+//                else
+//                    refreshSignalMap(entryList, (mapNetworkDialog.containsKey(_all_)
+//                            && mapNetworkDialog.get(_all_)));
+//                // Ins End of ++ spu
+////                refreshMap(entryList); -- spu
+//
+//            } else {
+//                Log.d(TAG, "No data for selected date");
+//                // Add popup alert
+//            }
+//        }
+//    }
 
-                    // Del Begin of ++ spu
-//                    JSONObject data = jsonObject.getJSONObject("data");
-//                    JSONArray entries = data.getJSONArray("entries");
-//                    Log.d(TAG, entries.length() + " entries for selected timeframe");
-//                    for(int i = 0; i < entries.length(); ++i){
-//                        JSONObject jsonentry = entries.getJSONObject(i);
-////                    Log.d(TAG, entry.toString());
-//                        Entry entry = Entry.mapJSON(jsonentry);
-//                        entryList.add(entry);
-//                    }
-                    // Del End of ++ spu
-                    // ret = true; -- spu
-                }
-                ret = true;  // ++ spu
-
-            } catch (URISyntaxException | IOException | JSONException e) {
-                e.printStackTrace();
-            }
-            return ret;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean b) {
-            if (b) {
-                // Ins Begin of ++ spu
-                entryListGlobal = entryList;
-                // added "all" network filter
-
-                if (mapView == 0)
-                    refreshMap(entryList, (mapNetworkDialog.containsKey(_all_)
-                            && mapNetworkDialog.get(_all_)));
-                else
-                    refreshSignalMap(entryList, (mapNetworkDialog.containsKey(_all_)
-                            && mapNetworkDialog.get(_all_)));
-                // Ins End of ++ spu
-//                refreshMap(entryList); -- spu
-
-            } else {
-                Log.d(TAG, "No data for selected date");
-                // Add popup alert
-            }
-        }
-    }
+    // Del End of  ++ spu
 
     private String genHash(String input) throws NoSuchAlgorithmException {
         String IMEI_Base64 = "";
@@ -1007,23 +1053,78 @@ public class MapFragment extends Fragment implements DateSelectedListener,
         // Does nothing, but you could go into the user's profile page, for example.
     }
 
-    public void fillEntriesData(JSONObject jsonObject, ArrayList<Entry> entryList) {
-        try {
-            JSONArray data = jsonObject.getJSONArray("data");
-            for (int i = 0; i < data.length(); i++) {
-                JSONArray entries = data.getJSONArray(i);
+//    public void fillEntriesData(JSONObject jsonObject, ArrayList<Entry> entryList) {
+//        try {
+//            JSONArray data = jsonObject.getJSONArray("data");
+//            for (int i = 0; i < data.length(); i++) {
+//                JSONArray entries = data.getJSONArray(i);
+//
+//                for (int j = 0; j < entries.length(); j++) {
+//                    JSONObject jsonentry = entries.getJSONObject(j);
+//                    Entry entry = Entry.mapJSON(jsonentry);
+//                    entryList.add(entry);
+//                }
+//            }
+//
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
 
-                for (int j = 0; j < entries.length(); j++) {
-                    JSONObject jsonentry = entries.getJSONObject(j);
-                    Entry entry = Entry.mapJSON(jsonentry);
-                    entryList.add(entry);
-                }
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-    }
+//    public void buildEntriesData(JsonParser jsonParser, ArrayList<Entry> entryList) {
+//        try {
+//            Entry entry = new Entry();
+//            entry.coordinate = new Coordinate(0,0);
+//            while(true){
+//                JsonToken token = jsonParser.nextToken();
+//                if(token == null){
+//                    break;
+//                }
+//
+//                String name = jsonParser.getCurrentName();
+//                if(name != null){
+//
+//                    if(name.equals("network_type")){
+//                        jsonParser.nextToken();
+//                        entry.network_type = jsonParser.getIntValue();
+//                        entryList.add(entry);
+//                        entry = new Entry();
+//                        entry.coordinate = new Coordinate(0,0);
+//                    }
+//                    else if(name.equals("timestamp")){
+//                        jsonParser.nextToken();
+//                        entry.timestamp= jsonParser.getLongValue();
+//                    }
+//                    else if(name.equals("fused_lat")){
+//                        jsonParser.nextToken();
+//                        entry.coordinate.setLatitude(jsonParser.getDoubleValue());
+//                    }
+//                    else if(name.equals("fused_long")){
+//                        jsonParser.nextToken();
+//                        entry.coordinate.setLongitude(jsonParser.getDoubleValue());
+//                    }
+//                    else if(name.equals("network_cell_type")){
+//                        jsonParser.nextToken();
+//                        entry.networkCellType = jsonParser.getIntValue();
+//                    }
+//
+//                    else if(name.equals("signal_dbm")){
+//                        jsonParser.nextToken();
+//                        entry.dbm = jsonParser.getIntValue();
+//                    }
+//
+//                    else if(name.equals("signal_level")){
+//                        jsonParser.nextToken();
+//                        entry.signalLevel = jsonParser.getIntValue();
+//                    }
+//                }
+//
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
     // Ins End of ++ spu
 }

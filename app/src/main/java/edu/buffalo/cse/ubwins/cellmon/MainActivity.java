@@ -720,6 +720,12 @@ public class MainActivity extends AppCompatActivity implements
                     args.putInt("index", 1);
                     fragment.setArguments(args);
                     break;
+                case 3:
+                    fragment = new UIStatistics(); // UI Statistics 2
+                    // Supply index input as an argument.
+                    args.putInt("index", 2);
+                    fragment.setArguments(args);
+                    break;
                 // Ins End of ++ spu
                 default:
                     fragment = new HomeFragment();

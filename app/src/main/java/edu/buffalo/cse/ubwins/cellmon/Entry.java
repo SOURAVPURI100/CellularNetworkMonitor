@@ -22,7 +22,8 @@ public class Entry implements ClusterItem,
     public int clusterNumber = 0;
     public int network_type = 0; // ++ spu
 
-    private Entry(){};
+//    private Entry(){}; -- spu
+    public Entry(){}; //++ spu
     public static Entry mapJSON(JSONObject object) throws JSONException {
         Entry ret = new Entry();
         ret.timestamp = object.getLong("timestamp");

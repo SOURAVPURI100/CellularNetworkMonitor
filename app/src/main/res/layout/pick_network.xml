@@ -37,13 +37,6 @@
         android:clickable="true"/>
 
     <CheckBox
-        android:id="@+id/_3_5G"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/_3.5G"
-        android:clickable="true"/>
-
-    <CheckBox
         android:id="@+id/_4G"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
