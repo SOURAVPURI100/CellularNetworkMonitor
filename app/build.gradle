@@ -48,7 +48,10 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.4.1'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.1'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.4.1'
+<<<<<<< HEAD
     compile 'com.github.Todd-Davies:ProgressWheel:1.2'
+=======
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 
 }
 

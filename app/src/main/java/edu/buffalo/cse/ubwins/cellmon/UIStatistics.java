@@ -2,6 +2,10 @@ package edu.buffalo.cse.ubwins.cellmon;
 
 import android.app.Fragment;
 import android.graphics.Color;
+<<<<<<< HEAD
+=======
+import android.os.Build;
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,7 +15,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.*;
 import com.github.mikephil.charting.data.PieData;
@@ -19,7 +22,14 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
+<<<<<<< HEAD
 import java.text.DateFormatSymbols;
+=======
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -67,9 +77,14 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
     private String dateValue = "";
     private MinDateTask minDateTask;
     private GetJSONTask getJSONTask;
+<<<<<<< HEAD
     private ProgressBar progressBar;
     private PieChart pieChart;
     private View rootView = null;
+=======
+    private List<TechnolgiesData> techData = new ArrayList<>();
+    private PieChart pieChart;
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
     // Ins End of ++ spu
 
     public UIStatistics() {
@@ -90,10 +105,13 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
         netSelect = NetworkSelect.newInstance("Network");
         netSelect.setTargetFragment(UIStatistics.this, 0);
         netSelect.setCancelable(true);
+<<<<<<< HEAD
         // Add Progress Wheel on a new Dialog
         progressBar = ProgressBar.newInstance("Loading");
         progressBar.setTargetFragment(UIStatistics.this, 0);
 //        progressBar.setCancelable(true);
+=======
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
         // Get the Map View Signal or Technology
         Bundle args = getArguments();
         mapView = args.getInt("index");
@@ -105,6 +123,7 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 //        Add Layout for fragment in Activity Container
+<<<<<<< HEAD
 
         if(savedInstanceState == null){
             rootView = inflater.inflate(R.layout.ui_statistics, container, false);
@@ -119,6 +138,26 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
             mapDate.setText("Day " + df.format(c.getTime()));
 
         }
+=======
+        View rootView = inflater.inflate(R.layout.ui_statistics, container, false);
+        // Add pie chart view
+        pieChart = (PieChart) rootView.findViewById(R.id.piechart);
+        // Ins Begin of ++ spu
+        // Adding legend text below
+//        mapDate = (TextView) rootView.findViewById(R.id.detailTitle);
+//
+//        Calendar c = Calendar.getInstance();
+//        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
+//        mapDate.setText("Day " + df.format(c.getTime()));
+
+        // Ins End of ++ spu
+//        try {
+//            MapsInitializer.initialize(getActivity().getApplicationContext());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        Network int to type relationship
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 
         return rootView;
     }
@@ -195,10 +234,13 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
 //        Ins Begin of ++ spu
         getJSONTask = new GetJSONTask(getActivity(), UIStatistics.this);
         getJSONTask.execute(type, value, mapView + "");
+<<<<<<< HEAD
         // Show Progress Wheel
         if(progressBar != null){
             progressBar.show(getActivity().getFragmentManager(), "Loading");
         }
+=======
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 //        Ins End of ++ spu
 //        refreshMap();
     }
@@ -228,7 +270,11 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
             entries = filterNetworkEntries(entries);
         }
 
+<<<<<<< HEAD
         if(entries != null && entries.size() > 0){
+=======
+        if(entries != null){
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
             // build map for technologies count Technolgies
             List<TechnolgiesData> techData = buildTechData(entries);
 
@@ -256,6 +302,7 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
             pieChart.invalidate();
             pieChart.setCenterText("Technologies");
             pieChart.setCenterTextColor(Color.GREEN);
+<<<<<<< HEAD
 
 
             // Fill date on bottom map view
@@ -279,6 +326,10 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
         if(progressBar != null && progressBar.isVisible()){
             progressBar.dismiss();
         }
+=======
+
+        }
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 
     }
 
@@ -370,9 +421,12 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
                 }
 
             }
+<<<<<<< HEAD
             else{
                 unknownCount++;
             }
+=======
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 
         }
         // Remove unknown Technologies count
@@ -389,6 +443,7 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
             totalPercent = totalPercent - techObj.percentage;
         }
 
+<<<<<<< HEAD
         // Logic to adjust total added percentage to 100%
         int i = 0;
         while(totalPercent > 0){
@@ -412,6 +467,8 @@ public class UIStatistics extends Fragment implements DateSelectedListener,
         }
         // Logic to adjust total added percentage to 100%
 
+=======
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
         return techData;
     }
 

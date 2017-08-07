@@ -168,7 +168,10 @@
     <orderEntry type="library" exported="" name="play-services-instantapps-10.2.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-iid-10.2.0" level="project" />
     <orderEntry type="library" exported="" name="jackson-databind-2.4.1" level="project" />
+<<<<<<< HEAD
     <orderEntry type="library" exported="" name="ProgressWheel-1.2" level="project" />
+=======
+>>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
     <orderEntry type="library" exported="" name="play-services-panorama-10.2.0" level="project" />
     <orderEntry type="library" exported="" name="multidex-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="play-services-safetynet-10.2.0" level="project" />
