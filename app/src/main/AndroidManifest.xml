@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="edu.buffalo.cse.ubwins.cellmon">
 
     <uses-sdk android:minSdkVersion="19"/>
@@ -23,7 +24,8 @@
         android:supportsRtl="true"
         android:hardwareAccelerated="false"
         android:largeHeap="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:replace="android:label,android:theme">
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAC0IpFzMre9sTLch-O95nTSK8LBfBFbrI	"/>

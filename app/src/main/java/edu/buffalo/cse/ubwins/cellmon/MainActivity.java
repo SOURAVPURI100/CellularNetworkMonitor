@@ -283,15 +283,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-
-
-
-
-
-
-
-
-
     public void requestLocationPermission() {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
@@ -718,6 +709,12 @@ public class MainActivity extends AppCompatActivity implements
                     fragment = new MapFragment(); // Signal view 1
                     // Supply index input as an argument.
                     args.putInt("index", 1);
+                    fragment.setArguments(args);
+                    break;
+                case 3:
+                    fragment = new UIStatistics(); // UI Statistics 2
+                    // Supply index input as an argument.
+                    args.putInt("index", 2);
                     fragment.setArguments(args);
                     break;
                 // Ins End of ++ spu

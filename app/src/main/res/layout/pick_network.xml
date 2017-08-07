@@ -12,7 +12,7 @@
         android:id="@+id/all"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="all"
+        android:text="@string/all"
         android:clickable="true"/>
 
     <CheckBox
@@ -37,13 +37,6 @@
         android:clickable="true"/>
 
     <CheckBox
-        android:id="@+id/_3_5G"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/_3.5G"
-        android:clickable="true"/>
-
-    <CheckBox
         android:id="@+id/_4G"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -55,7 +48,7 @@
         android:layout_height="40dp"
         android:id="@+id/ok"
         android:background="@drawable/network_dialog_button"
-        android:text="OK"
+        android:text="@string/ok"
         android:layout_gravity="center"
         android:clickable="true"/>
 

@@ -5,6 +5,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="ok">OK</string>
+    <string name="all">All</string>
     <string name="settings">Settings</string>
     <string name="app_menu_mapSignalView">Map Signal Strength</string> <!-- ++ spu -->
     <string name="app_menu_UIStatistics">UI Statistics</string> <!-- ++ spu -->

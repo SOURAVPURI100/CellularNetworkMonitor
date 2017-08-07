@@ -19,7 +19,7 @@ import android.widget.CompoundButton;
 public class NetworkSelect extends DialogFragment implements View.OnClickListener,
         CheckBox.OnCheckedChangeListener{
 
-    CheckBox checkall, check2G, check2_5G, check3G, check3_5G, check4G ;
+    CheckBox checkall, check2G, check2_5G, check3G, check4G ;
     Button butOK= null;
     String title ="";
 
@@ -59,9 +59,6 @@ public class NetworkSelect extends DialogFragment implements View.OnClickListene
         check3G = (CheckBox) view.findViewById(R.id._3G);
         check3G.setChecked(true);
         check3G.setOnCheckedChangeListener(this);
-        check3_5G = (CheckBox) view.findViewById(R.id._3_5G);
-        check3_5G.setChecked(true);
-        check3_5G.setOnCheckedChangeListener(this);
         check4G =(CheckBox) view.findViewById(R.id._4G);
         check4G.setChecked(true);
         check4G.setOnCheckedChangeListener(this);
@@ -86,7 +83,7 @@ public class NetworkSelect extends DialogFragment implements View.OnClickListene
 
                 NetworkDialogListener listener = (NetworkDialogListener) getTargetFragment();
                 listener.onFinishNetworkDialog(checkall.isChecked(), check2G.isChecked(),
-                    check2_5G.isChecked(), check3G.isChecked(), check3_5G.isChecked(),
+                    check2_5G.isChecked(), check3G.isChecked(),
                     check4G.isChecked());
                 dismiss();
                 break;
@@ -117,14 +114,12 @@ public class NetworkSelect extends DialogFragment implements View.OnClickListene
                 check2G.setEnabled(false);
                 check2_5G.setEnabled(false);
                 check3G.setEnabled(false);
-                check3_5G.setEnabled(false);
                 check4G.setEnabled(false);
             }
             else{
                 check2G.setEnabled(true);
                 check2_5G.setEnabled(true);
                 check3G.setEnabled(true);
-                check3_5G.setEnabled(true);
                 check4G.setEnabled(true);
             }
 
@@ -135,8 +130,6 @@ public class NetworkSelect extends DialogFragment implements View.OnClickListene
             check2_5G.setChecked(isChecked);
         else if(buttonView == check3G)
             check3G.setChecked(isChecked);
-        else if(buttonView == check3_5G)
-            check3_5G.setChecked(isChecked);
         else if(buttonView == check4G)
             check4G.setChecked(isChecked);
 

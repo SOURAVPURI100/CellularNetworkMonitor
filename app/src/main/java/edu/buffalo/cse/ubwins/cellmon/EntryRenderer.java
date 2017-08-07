@@ -209,26 +209,7 @@ public class EntryRenderer extends DefaultClusterRenderer<Entry> {
 
     // Build Network Map
     public void buildNetworkMap(){
-        mapNetwork.put(0, "Unknown");
-        mapNetwork.put(1, "2.5G");
-        mapNetwork.put(2, "2.5G");
-        mapNetwork.put(3, "3G");
-        mapNetwork.put(4, "3G");
-        mapNetwork.put(5, "3G");
-        mapNetwork.put(6, "3G");
-        mapNetwork.put(7, "2G");
-        mapNetwork.put(8, "3G");
-        mapNetwork.put(9, "3G");
-        mapNetwork.put(10, "3G");
-        mapNetwork.put(11, "2G");
-        mapNetwork.put(12, "2G");
-        mapNetwork.put(13, "4G");
-        mapNetwork.put(14, "3G");
-        mapNetwork.put(15, "3G");
-        mapNetwork.put(16, "2G");
-        mapNetwork.put(17, "3G");
-        mapNetwork.put(18, "3G");
-
+          CommonMethods.networkMap(mapNetwork);
     }
     // Build custom marker for cluster item and individual marker
     public void buildCustomMarker(MarkerOptions marker, int resource){
