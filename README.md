@@ -13,8 +13,6 @@ Serialization of data sent over the network is achieved using [Google Protocol B
 4. Data activity  
 5. Stores all data in SQLite DB on local device storage  
 6. Reports can be exported in the form of CSV files  
- 
-# More to come:
 7. Statistical Analysis in the form of UI  
 8. Map UI integration lets you know in what areas you get what Network Reception(both RSSI and data type)
 
