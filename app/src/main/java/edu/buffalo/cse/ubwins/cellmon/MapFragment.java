@@ -1,8 +1,17 @@
 package edu.buffalo.cse.ubwins.cellmon;
 
+import android.app.DatePickerDialog;
 import android.app.Fragment;
+//import android.app.FragmentManager;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Path;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
 import android.util.Log;
@@ -12,23 +21,26 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.DatePicker;
 import android.widget.TextView;
 import android.widget.Toast;
-<<<<<<< HEAD
-=======
 
 import com.fasterxml.jackson.databind.ObjectMapper;
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
-<<<<<<< HEAD
-=======
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -52,7 +64,6 @@ import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormatSymbols;
@@ -60,15 +71,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.*;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-<<<<<<< HEAD
-=======
 // Ins Begin of ++ spu
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -76,7 +86,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
 // Ins End of ++ spu
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 
 import javax.crypto.BadPaddingException;
 
@@ -124,11 +133,8 @@ public class MapFragment extends Fragment implements DateSelectedListener,
     private String dateValue = "";
     private MinDateTask minDateTask;
     private GetJSONTask getJSONTask;
-<<<<<<< HEAD
     private LatLng curLoc = null;
     private View rootView = null;
-=======
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
     // Ins End of ++ spu
 
     public MapFragment() {
@@ -194,19 +200,11 @@ public class MapFragment extends Fragment implements DateSelectedListener,
                 public void onMapReady(GoogleMap mMap) {
                     googleMap = mMap;
 //              refreshMap(null); -- spu
-<<<<<<< HEAD
                     // Ins Begin of ++ spu
                     if (mapView == 0)
                         refreshMap(null);
                     else
                         refreshSignalMap(null);
-=======
-                // Ins Begin of ++ spu
-                if (mapView == 0)
-                    refreshMap(null);
-                else
-                    refreshSignalMap(null);
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 
 
                     // Ins End of ++ spu
@@ -317,14 +315,11 @@ public class MapFragment extends Fragment implements DateSelectedListener,
 //        Ins Begin of ++ spu
         getJSONTask = new GetJSONTask(getActivity(), MapFragment.this);
         getJSONTask.execute(type, value, mapView+"");
-<<<<<<< HEAD
 
         // Show Progress Wheel
         if(progressBar != null){
             progressBar.show(getActivity().getFragmentManager(), "Loading");
         }
-=======
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
 //        Ins End of ++ spu
 //        refreshMap();
     }
@@ -873,13 +868,8 @@ public class MapFragment extends Fragment implements DateSelectedListener,
 //    }
 
     // Del End of ++ spu
-<<<<<<< HEAD
 
 
-=======
-
-
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
     // Del Begin of  ++ spu
 
 //    class GetJSONTask extends AsyncTask<String, Void, Boolean> {

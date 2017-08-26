@@ -1,21 +1,21 @@
 /**
- *   Created by Gautam on 6/18/16.
- *   MBP111.0138.B16
- *   agautam2@buffalo.edu
- *   University at Buffalo, The State University of New York.
- *   Copyright © 2016 Gautam. All rights reserved.
- *
- *   CelNetMon v1.0 ~ gets location pure network based location does not fail to GPS
- *   CelNetMon v1.1 ~ registers device uses a JSON POST
- *   CelNetMon v1.2 ~ with user permissions for android v6.0+, records DataActivity and DataSate, logs call state
- *   CelNetMon v1.2.1 ~ with alarm and periodic recording on 60 secs.
- *   CelNetMon v1.2.2 ~ Permissions handled on onCreate in MainActivity. GPS functionality included. Records data even when location object returns null.
- *   CelNetMon v1.3 ~ Uses ScheduledExecutorService, does not uses Alarm(removed), does not uses Handler(removed), Uses wake lock.
- *   CelNetMon v1.3.1 ~ New Registration Fields Added. Now a total of 19 fields in the registration POST.
- *   CelNetMon v1.3.2 ~ Registration fields total of 18. HTTP POST via building ByteArrayEntity. Protocol Buffers tested.
- *   CelNetMon v1.3.3 ~ SALT(SharedPref) and HASH(SHA256) functionality added and tested. Minor Layout Change. Toast Messages Changed.
- *   CelNetMon v1.4.0 ~ Automated Registration. Splash Screen Added.
- *   CelNetMon v1.4.1 ~ BETA v1 : Uploading on wifi and charging in foreground, button changes,
+ * Created by Gautam on 6/18/16.
+ * MBP111.0138.B16
+ * agautam2@buffalo.edu
+ * University at Buffalo, The State University of New York.
+ * Copyright © 2016 Gautam. All rights reserved.
+ * <p>
+ * CelNetMon v1.0 ~ gets location pure network based location does not fail to GPS
+ * CelNetMon v1.1 ~ registers device uses a JSON POST
+ * CelNetMon v1.2 ~ with user permissions for android v6.0+, records DataActivity and DataSate, logs call state
+ * CelNetMon v1.2.1 ~ with alarm and periodic recording on 60 secs.
+ * CelNetMon v1.2.2 ~ Permissions handled on onCreate in MainActivity. GPS functionality included. Records data even when location object returns null.
+ * CelNetMon v1.3 ~ Uses ScheduledExecutorService, does not uses Alarm(removed), does not uses Handler(removed), Uses wake lock.
+ * CelNetMon v1.3.1 ~ New Registration Fields Added. Now a total of 19 fields in the registration POST.
+ * CelNetMon v1.3.2 ~ Registration fields total of 18. HTTP POST via building ByteArrayEntity. Protocol Buffers tested.
+ * CelNetMon v1.3.3 ~ SALT(SharedPref) and HASH(SHA256) functionality added and tested. Minor Layout Change. Toast Messages Changed.
+ * CelNetMon v1.4.0 ~ Automated Registration. Splash Screen Added.
+ * CelNetMon v1.4.1 ~ BETA v1 : Uploading on wifi and charging in foreground, button changes,
  */
 
 package edu.buffalo.cse.ubwins.cellmon;
@@ -65,9 +65,11 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -78,6 +80,7 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
 import android.util.Base64;
 import android.app.ActivityManager;
 
@@ -87,8 +90,7 @@ import com.facebook.stetho.Stetho;
 import java.io.*; // ++ spu
 
 public class MainActivity extends AppCompatActivity implements
-        ActivityCompat.OnRequestPermissionsResultCallback
-{
+        ActivityCompat.OnRequestPermissionsResultCallback {
 
     public final String TAG = "[CELNETMON-ACTIVITY]";
     private DrawerLayout mLayout;
@@ -109,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements
     String URL_UPLOAD = "http://104.196.177.7:80/aggregator/upload/";
 
     private String[] actions;
-//    private DrawerLayout mDrawerLayout;
+    //    private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private CharSequence mTitle;
     private CharSequence mDrawerTitle;
@@ -118,21 +120,22 @@ public class MainActivity extends AppCompatActivity implements
     private Fragment fragment; // ++ spu
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base);
 
+        if (savedInstanceState == null) { // ++ spu
+            // Initialize Stetho to allow for viewing database in the Chrome inspector
+            Stetho.initialize(Stetho.newInitializerBuilder(this)
+                    .enableDumpapp(
+                            Stetho.defaultDumperPluginsProvider(this)
+                    ).enableWebKitInspector(
+                            Stetho.defaultInspectorModulesProvider(this)
+                    ).build());
+        }
 
-        // Initialize Stetho to allow for viewing database in the Chrome inspector
-        Stetho.initialize(Stetho.newInitializerBuilder(this)
-                .enableDumpapp(
-                        Stetho.defaultDumperPluginsProvider(this)
-                ).enableWebKitInspector(
-                        Stetho.defaultInspectorModulesProvider(this)
-                ).build());
 
 //        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
 //        setSupportActionBar(mToolbar);
@@ -140,40 +143,31 @@ public class MainActivity extends AppCompatActivity implements
         file = new File(getApplicationContext().getFilesDir(), fileName);
 
         /*DECLARE EDITOR FOR PERMISSIONS */
-       SharedPreferences.Editor editor = preferences.edit();
+        SharedPreferences.Editor editor = preferences.edit();
 
         /*First read location permission*/
         if (ActivityCompat.checkSelfPermission(getApplicationContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestLocationPermission();
-        }
-        else
-        {
+        } else {
             editor.putBoolean("LOCATION", true);
             editor.commit();
         }
 
         /*Second read phone state permission*/
         if (ActivityCompat.checkSelfPermission(getApplicationContext(),
-                Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED)
-        {
+                Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             requestPhonePermission();
-        }
-        else
-        {
+        } else {
             editor.putBoolean("PHONE", true);
             editor.commit();
         }
 
         /*Write to Storage permission*/
         if (ActivityCompat.checkSelfPermission(getApplicationContext(),
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-        {
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestStoragePermission();
-        }
-        else
-        {
+        } else {
             editor.putBoolean("STORAGE", true);
             editor.commit();
         }
@@ -181,26 +175,22 @@ public class MainActivity extends AppCompatActivity implements
         /*Wake Lock Permission*/
 
         if (ActivityCompat.checkSelfPermission(getApplicationContext(),
-                Manifest.permission.WAKE_LOCK) != PackageManager.PERMISSION_GRANTED)
-        {
+                Manifest.permission.WAKE_LOCK) != PackageManager.PERMISSION_GRANTED) {
             requestWakeLockPermission();
-        }
-        else
-        {
+        } else {
             editor.putBoolean("WAKELOCK", true);
             editor.commit();
         }
 
         /* CALL TO REGISTER DEVICE*/
         /*FETCH ALL CONDITIONS TO CHECK FROM SHAREDPREF*/
-        boolean locPermission = preferences.getBoolean("LOCATION",false);
-        boolean storagePermission = preferences.getBoolean("STORAGE",false);
-        boolean phonePermission = preferences.getBoolean("PHONE",false);
+        boolean locPermission = preferences.getBoolean("LOCATION", false);
+        boolean storagePermission = preferences.getBoolean("STORAGE", false);
+        boolean phonePermission = preferences.getBoolean("PHONE", false);
         boolean isRegistered = preferences.getBoolean("isRegistered", false);
 
         /*Call only after all 3 permissions are granted*/
-        if(!isRegistered && locPermission && storagePermission && phonePermission)
-        {
+        if (!isRegistered && locPermission && storagePermission && phonePermission) {
             onRegisterClicked();
         }
 
@@ -224,20 +214,19 @@ public class MainActivity extends AppCompatActivity implements
         mDrawerList.setOnItemClickListener(new DrawerClickListener());
 
 
-
         mDrawerToggle = new ActionBarDrawerToggle(
                 this,
                 mLayout,
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close
         ) {
-            public void onDrawerClosed(View view){
+            public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
                 getSupportActionBar().setTitle(mTitle);
                 invalidateOptionsMenu();
             }
 
-            public void onDrawerOpened(View drawerView){
+            public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
                 getSupportActionBar().setTitle("Options");
                 invalidateOptionsMenu();
@@ -249,33 +238,33 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
 
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             selectItem(0);
         }
 
     }
 
     @Override
-    protected void onPostCreate(Bundle savedInstanceState){
+    protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         mDrawerToggle.syncState();
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig){
+    public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.app_menu,menu);
+        getMenuInflater().inflate(R.menu.app_menu, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if(mDrawerToggle.onOptionsItemSelected(item)){
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
             return true;
         }
 
@@ -318,17 +307,14 @@ public class MainActivity extends AppCompatActivity implements
                 boolean one = preferences.getBoolean("STORAGE", false);
                 boolean two = preferences.getBoolean("PHONE", false);
                 boolean isRegistered = preferences.getBoolean("isRegistered", false);
-                if(one && two && !isRegistered)
-                {
+                if (one && two && !isRegistered) {
                     onRegisterClicked();
                 }
-            }
-            else {
+            } else {
                 Snackbar.make(mLayout, R.string.permissions_not_granted,
                         Snackbar.LENGTH_SHORT).show();
             }
-        }
-        else if (requestCode == REQUEST_STORAGE) {
+        } else if (requestCode == REQUEST_STORAGE) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Snackbar.make(mLayout, R.string.permission_available_storage,
                         Snackbar.LENGTH_SHORT).show();
@@ -337,17 +323,14 @@ public class MainActivity extends AppCompatActivity implements
                 boolean one = preferences.getBoolean("LOCATION", false);
                 boolean two = preferences.getBoolean("PHONE", false);
                 boolean isRegistered = preferences.getBoolean("isRegistered", false);
-                if(one && two && !isRegistered)
-                {
+                if (one && two && !isRegistered) {
                     onRegisterClicked();
                 }
-            }
-            else {
+            } else {
                 Snackbar.make(mLayout, R.string.permissions_not_granted,
                         Snackbar.LENGTH_SHORT).show();
             }
-        }
-        else if (requestCode == REQUEST_PHONE) {
+        } else if (requestCode == REQUEST_PHONE) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Snackbar.make(mLayout, R.string.permission_available_phone,
                         Snackbar.LENGTH_SHORT).show();
@@ -356,28 +339,24 @@ public class MainActivity extends AppCompatActivity implements
                 boolean one = preferences.getBoolean("LOCATION", false);
                 boolean two = preferences.getBoolean("STORAGE", false);
                 boolean isRegistered = preferences.getBoolean("isRegistered", false);
-                if(one && two && !isRegistered)
-                {
+                if (one && two && !isRegistered) {
                     onRegisterClicked();
                 }
             } else {
                 Snackbar.make(mLayout, R.string.permissions_not_granted,
                         Snackbar.LENGTH_SHORT).show();
             }
-        }
-        else if (requestCode == REQUEST_WAKELOCK) {
+        } else if (requestCode == REQUEST_WAKELOCK) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Snackbar.make(mLayout, R.string.permission_available_wakelock,
                         Snackbar.LENGTH_SHORT).show();
                 editor.putBoolean("WAKELOCK", true);
                 editor.commit();
-            }
-            else {
+            } else {
                 Snackbar.make(mLayout, R.string.permissions_not_granted,
                         Snackbar.LENGTH_SHORT).show();
             }
-        }
-        else {
+        } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
@@ -392,13 +371,33 @@ public class MainActivity extends AppCompatActivity implements
         return telephonyManager.getDeviceId();
     }
 
-    private String getBoard() { return Build.BOARD; }
-    private String getBrand() { return Build.BRAND; }
-    private String getDevice() { return Build.DEVICE; }
-    private String getHardware() { return android.os.Build.HARDWARE; }
-    private String getManufacturer() { return android.os.Build.MANUFACTURER; }
-    private String getModel() { return android.os.Build.MODEL; }
-    private String getProduct() { return Build.PRODUCT; }
+    private String getBoard() {
+        return Build.BOARD;
+    }
+
+    private String getBrand() {
+        return Build.BRAND;
+    }
+
+    private String getDevice() {
+        return Build.DEVICE;
+    }
+
+    private String getHardware() {
+        return android.os.Build.HARDWARE;
+    }
+
+    private String getManufacturer() {
+        return android.os.Build.MANUFACTURER;
+    }
+
+    private String getModel() {
+        return android.os.Build.MODEL;
+    }
+
+    private String getProduct() {
+        return Build.PRODUCT;
+    }
 
     /* https://developer.android.com/reference/android/telephony/TelephonyManager.html */
 
@@ -447,11 +446,15 @@ public class MainActivity extends AppCompatActivity implements
     /* https://developer.android.com/reference/android/os/Build.VERSION.html */
     //private String getBaseOS(){return Build.VERSION.BASE_OS;}
 
-    private String getRelease() { return Build.VERSION.RELEASE; }
-    private String getSdkInt() { return Integer.toString(Build.VERSION.SDK_INT); }
+    private String getRelease() {
+        return Build.VERSION.RELEASE;
+    }
 
-    public boolean isConnected()
-    {
+    private String getSdkInt() {
+        return Integer.toString(Build.VERSION.SDK_INT);
+    }
+
+    public boolean isConnected() {
         ConnectivityManager connMgr =
                 (ConnectivityManager) getSystemService(Activity.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
@@ -459,130 +462,119 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-    public String POST(String url)
-    {
+    public String POST(String url) {
         Log.d(TAG, "Registering device...");
 
         InputStream inputStream = null;
         int statusCode;
         String result = "";
 
-            try {
+        try {
 
-                String IMEI = getIMEI();
-                IMEI_TO_POST = genHash(IMEI);
+            String IMEI = getIMEI();
+            IMEI_TO_POST = genHash(IMEI);
 
 
                 /*FETCH OTHER PARAMS*/
-                String board = getBoard();
-                String brand = getBrand();
-                String device = getDevice();
-                String hardware = getHardware();
-                String manufacturer = getManufacturer();
-                String modelMake = getModel();
-                String product = getProduct();
+            String board = getBoard();
+            String brand = getBrand();
+            String device = getDevice();
+            String hardware = getHardware();
+            String manufacturer = getManufacturer();
+            String modelMake = getModel();
+            String product = getProduct();
 
-                String networkCountryISO = getNetworkCountryISO();
-                String networkOperatorCode = getNetworkOperatorCode();
-                String networkOperatorName = getNetworkOperatorName();
-                String phoneType = getPhoneType();
-                String simCountryISO = getSimCountryISO();
-                String simOperator = getSimOperator();
-                String simOperatorName = getSimOperatorName();
+            String networkCountryISO = getNetworkCountryISO();
+            String networkOperatorCode = getNetworkOperatorCode();
+            String networkOperatorName = getNetworkOperatorName();
+            String phoneType = getPhoneType();
+            String simCountryISO = getSimCountryISO();
+            String simOperator = getSimOperator();
+            String simOperatorName = getSimOperatorName();
 
-                String release = getRelease();
-                String sdkInt = getSdkInt();
+            String release = getRelease();
+            String sdkInt = getSdkInt();
 
                 /*SERIALIZATION*/
-                RegisterDeviceOuterClass.RegisterDevice registerDevice =
-                        RegisterDeviceOuterClass.RegisterDevice.newBuilder()
-                        .setIMEIHASH(IMEI_TO_POST)
-                        .setBOARD(board)
-                        .setBRAND(brand)
-                        .setDEVICE(device)
-                        .setHARDWARE(hardware)
-                        .setMANUFACTURER(manufacturer)
-                        .setMODEL(modelMake)
-                        .setPRODUCT(product)
-                        .setNETWORKCOUNTRYISO(networkCountryISO)
-                        .setNETWORKOPERATORCODE(networkOperatorCode)
-                        .setNETWORKOPERATORNAME(networkOperatorName)
-                        .setPHONETYPE(phoneType)
-                        .setSIMCOUNTRYISO(simCountryISO)
-                        .setSIMOPERATOR(simOperator)
-                        .setSIMOPERATORNAME(simOperatorName)
-                        .setRELEASE(release)
-                        .setSDKINT(sdkInt).build();
+            RegisterDeviceOuterClass.RegisterDevice registerDevice =
+                    RegisterDeviceOuterClass.RegisterDevice.newBuilder()
+                            .setIMEIHASH(IMEI_TO_POST)
+                            .setBOARD(board)
+                            .setBRAND(brand)
+                            .setDEVICE(device)
+                            .setHARDWARE(hardware)
+                            .setMANUFACTURER(manufacturer)
+                            .setMODEL(modelMake)
+                            .setPRODUCT(product)
+                            .setNETWORKCOUNTRYISO(networkCountryISO)
+                            .setNETWORKOPERATORCODE(networkOperatorCode)
+                            .setNETWORKOPERATORNAME(networkOperatorName)
+                            .setPHONETYPE(phoneType)
+                            .setSIMCOUNTRYISO(simCountryISO)
+                            .setSIMOPERATOR(simOperator)
+                            .setSIMOPERATORNAME(simOperatorName)
+                            .setRELEASE(release)
+                            .setSDKINT(sdkInt).build();
 
-                byte infoToSend[] = registerDevice.toByteArray();
+            byte infoToSend[] = registerDevice.toByteArray();
 
                 /*1. create HttpClient*/
-                HttpClient httpclient = new DefaultHttpClient();
+            HttpClient httpclient = new DefaultHttpClient();
 
                 /*2. make POST request to the given URL*/
-                HttpPost httpPost = new HttpPost(url);
+            HttpPost httpPost = new HttpPost(url);
 
                 /*5. Build ByteArrayEntity*/
-                //StringEntity se = new StringEntity(json);
-                ByteArrayEntity byteArrayEntity = new ByteArrayEntity(infoToSend);
+            //StringEntity se = new StringEntity(json);
+            ByteArrayEntity byteArrayEntity = new ByteArrayEntity(infoToSend);
 
                 /*6. Set httpPost Entity*/
-                httpPost.setEntity(byteArrayEntity);
-                //httpPost.setEntity(inputStreamEntity);
+            httpPost.setEntity(byteArrayEntity);
+            //httpPost.setEntity(inputStreamEntity);
 
                 /*7. Set some headers to inform server about the type of the content*/
-                //httpPost.setHeader("Accept", "application/json");
-                //httpPost.setHeader("Content-type", "application/json");
+            //httpPost.setHeader("Accept", "application/json");
+            //httpPost.setHeader("Content-type", "application/json");
 
                 /*8. Execute POST request to the given URL*/
 
-                HttpResponse httpResponse = httpclient.execute(httpPost);
+            HttpResponse httpResponse = httpclient.execute(httpPost);
 
                 /*9. receive response as inputStream*/
-                statusCode = httpResponse.getStatusLine().getStatusCode();
+            statusCode = httpResponse.getStatusLine().getStatusCode();
 
                 /*CONVERT INPUT STREAM TO STRING*/
-                responsePhrase = EntityUtils.toString(httpResponse.getEntity());
-                Log.v(TAG, "RESPONSE" + responsePhrase);
-                Log.d(TAG, httpResponse.toString());
+            responsePhrase = EntityUtils.toString(httpResponse.getEntity());
+            Log.v(TAG, "RESPONSE" + responsePhrase);
+            Log.d(TAG, httpResponse.toString());
                 /*PARSE JSON RESPONSE*/
 
-                if(statusCode!=404)
-                {
-                    result = Integer.toString(statusCode);
-                    Log.v(TAG, "STATUS CODE: " + result);
-                }
-                else
-                {
-                    result = Integer.toString(statusCode);
-                    //Log.v(TAG, "STATUS CODE: " + result);
-                }
+            if (statusCode != 404) {
+                result = Integer.toString(statusCode);
+                Log.v(TAG, "STATUS CODE: " + result);
+            } else {
+                result = Integer.toString(statusCode);
+                //Log.v(TAG, "STATUS CODE: " + result);
             }
-            catch (Exception e)
-            {
-                Log.d("InputStream", e.getLocalizedMessage());
-            }
+        } catch (Exception e) {
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
         return result;
     }
 
-    public void onRegisterClicked()
-    {
+    public void onRegisterClicked() {
         boolean isConnected = isConnected();
         boolean isRegistered = preferences.getBoolean("isRegistered", false);
-        if (isConnected && !isRegistered)
-        {
+        if (isConnected && !isRegistered) {
             new HttpAsyncTask().execute(URL);
-        }
-        else
-        {
+        } else {
             Log.v(TAG, "isConnected = FALSE");
             Toast.makeText(getBaseContext(),
                     "Device has no Internet Connectivity! " +
                             "Please check your Network Connection and try again",
                     Toast.LENGTH_LONG).show();
 
-            if(!isRegistered)
-            {
+            if (!isRegistered) {
 
                 receiver = new NetworkStateReceiver();
                 receiver.addListener(new NetworkStateReceiver.NetworkStateReceiverListener() {
@@ -596,144 +588,128 @@ public class MainActivity extends AppCompatActivity implements
                         //Log.v("AUTOMATE", "NETWORK IS UNAVAILABLE");
                     }
                 });
-            registerReceiver(receiver,new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+                registerReceiver(receiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
             }
         }
     }
 
 
-    private class HttpAsyncTask extends AsyncTask<String, Void, String>
-    {
+    private class HttpAsyncTask extends AsyncTask<String, Void, String> {
         @Override
-        protected String doInBackground(String... urls)
-        {
+        protected String doInBackground(String... urls) {
             return POST(urls[0]);
         }
+
         @Override
-        protected void onPostExecute(String result)
-        {
+        protected void onPostExecute(String result) {
             try {
                 jsonObject = new JSONObject(responsePhrase);
                 statusPhrase = jsonObject.getString("status");
-            }
-            catch (JSONException j)
-            {
+            } catch (JSONException j) {
                 j.printStackTrace();
             }
 
-            if(statusPhrase!=null && statusPhrase.equals("SUCCESS"))
-            {
+            if (statusPhrase != null && statusPhrase.equals("SUCCESS")) {
                 TextView textView = (TextView) findViewById(R.id.textView30);
-                if(textView != null) textView.setText("Device Registered!");
+                if (textView != null) textView.setText("Device Registered!");
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putBoolean("isRegistered", true);
                 editor.commit();
                 boolean temp = preferences.getBoolean("isRegistered", false);
                 Log.e(TAG, "isRegistered value [temp]: " + temp);
-            }
-            else if(statusPhrase!=null && statusPhrase.equals("FAIL"))
-            {
+            } else if (statusPhrase != null && statusPhrase.equals("FAIL")) {
                 try {
                     reasonPhrase = jsonObject.getString("reason");
-                }
-                catch (JSONException j)
-                {
+                } catch (JSONException j) {
                     j.printStackTrace();
                 }
-                if(reasonPhrase.equals("Given IMEI_HASH configuration already exists"))
-                {
+                if (reasonPhrase.equals("Given IMEI_HASH configuration already exists")) {
                     TextView textView = (TextView) findViewById(R.id.textView30);
-                    if(textView != null) textView.setText("Device Already Registered!");
+                    if (textView != null) textView.setText("Device Already Registered!");
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putBoolean("isRegistered", true);
                     editor.commit();
-                }
-                else
-                {
+                } else {
                     Log.d(TAG, reasonPhrase);
                     TextView textView = (TextView) findViewById(R.id.textView30);
-                    if(textView != null) textView.setText("Device Registration Failed!");
+                    if (textView != null) textView.setText("Device Registration Failed!");
                 }
             }
         }
     }
 
-    private String genHash(String input) throws NoSuchAlgorithmException
-    {
-        String IMEI_Base64="";
-        try
-        {
+    private String genHash(String input) throws NoSuchAlgorithmException {
+        String IMEI_Base64 = "";
+        try {
             MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
             byte[] sha256Hash = sha256.digest(input.getBytes("UTF-8"));
             IMEI_Base64 = Base64.encodeToString(sha256Hash, Base64.DEFAULT);
-            IMEI_Base64=IMEI_Base64.replaceAll("\n", "");
+            IMEI_Base64 = IMEI_Base64.replaceAll("\n", "");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-            catch(Exception e)
-            {
-                e.printStackTrace();
-            }
         return IMEI_Base64;
     }
 
     private class DrawerClickListener implements android.widget.AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            Log.d(TAG,"ID selected: " + id);
+            Log.d(TAG, "ID selected: " + id);
             Log.d(TAG, "ID for Home: " + R.string.app_menu_home);
             selectItem(position);
         }
     }
 
-    private void selectItem(int position){
+    private void selectItem(int position) {
 //        Fragment fragment; -- spu
         FragmentManager fragmentManager = getFragmentManager(); // ++spu
         // Ins Begin of ++ spu
-        fragment =  fragmentManager.findFragmentByTag(TAG_RETAINED_FRAGMENT);
+        fragment = fragmentManager.findFragmentByTag(TAG_RETAINED_FRAGMENT);
 
-            // Ins End of ++ spu
-            Bundle args = new Bundle(); // ++ spu
-            switch (position) {
-                case 0:
-                    fragment = new HomeFragment();
-                    break;
-                case 1:
-                    fragment = new MapFragment(); // Technology View 0
-                    // Ins Begin of ++ spu
-                    // Supply index input as an argument.
-                    args.putInt("index", 0);
-                    fragment.setArguments(args);
-                    // Ins End of ++ spu
-                    break;
+        // Ins End of ++ spu
+        Bundle args = new Bundle(); // ++ spu
+        switch (position) {
+            case 0:
+                fragment = new HomeFragment();
+                break;
+            case 1:
+                fragment = new MapFragment(); // Technology View 0
                 // Ins Begin of ++ spu
-                case 2:
-                    fragment = new MapFragment(); // Signal view 1
-                    // Supply index input as an argument.
-                    args.putInt("index", 1);
-                    fragment.setArguments(args);
-                    break;
-                case 3:
-                    fragment = new UIStatistics(); // UI Statistics 2
-                    // Supply index input as an argument.
-                    args.putInt("index", 2);
-                    fragment.setArguments(args);
-                    break;
+                // Supply index input as an argument.
+                args.putInt("index", 0);
+                fragment.setArguments(args);
                 // Ins End of ++ spu
-                default:
-                    fragment = new HomeFragment();
-            }
+                break;
+            // Ins Begin of ++ spu
+            case 2:
+                fragment = new MapFragment(); // Signal view 1
+                // Supply index input as an argument.
+                args.putInt("index", 1);
+                fragment.setArguments(args);
+                break;
+            case 3:
+                fragment = new UIStatistics(); // UI Statistics 2
+                // Supply index input as an argument.
+                args.putInt("index", 2);
+                fragment.setArguments(args);
+                break;
+            // Ins End of ++ spu
+            default:
+                fragment = new HomeFragment();
+        }
 //        FragmentManager fragmentManager = getFragmentManager(); // --spu
-            fragmentManager.beginTransaction()
+        fragmentManager.beginTransaction()
 //                .replace(R.id.content_frame, fragment) -- spu
-                    .replace(R.id.content_frame, fragment, TAG_RETAINED_FRAGMENT) //++ spu
-                    .commit();
+                .replace(R.id.content_frame, fragment, TAG_RETAINED_FRAGMENT) //++ spu
+                .commit();
 
-            mDrawerList.setItemChecked(position, true);
-            setTitle(actions[position]);
-            mLayout.closeDrawers();
+        mDrawerList.setItemChecked(position, true);
+        setTitle(actions[position]);
+        mLayout.closeDrawers();
     }
 
     @Override
-    public void setTitle(CharSequence title){
+    public void setTitle(CharSequence title) {
         mTitle = title;
         getSupportActionBar().setTitle(mTitle);
     }

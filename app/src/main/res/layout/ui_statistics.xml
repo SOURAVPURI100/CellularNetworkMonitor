@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<<<<<<< HEAD
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-=======
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f
     android:orientation="vertical"
     android:id="@+id/ui_statistics"
     android:layout_width="match_parent"
@@ -13,7 +9,6 @@
         android:id="@+id/piechart"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" />
-<<<<<<< HEAD
 
     <!-- Ins begin of spu -->
     <LinearLayout
@@ -41,6 +36,3 @@
 
     <!-- Ins End of spu -->
 </RelativeLayout>
-=======
-</LinearLayout>
->>>>>>> 1addb32844a3510b4dd134234c87952ba30aee9f

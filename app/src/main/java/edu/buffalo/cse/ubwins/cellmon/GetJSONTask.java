@@ -10,8 +10,10 @@ import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.sym.BytesToNameCanonicalizer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -21,6 +23,8 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -28,10 +32,18 @@ import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import edu.buffalo.cse.ubwins.cellmon.DataRecordSmall;
+import com.google.protobuf.AbstractParser;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.ExtensionRegistryLite;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Parser;
 
 import static edu.buffalo.cse.ubwins.cellmon.CellularDataRecorder.TAG;
+import static edu.buffalo.cse.ubwins.cellmon.DataRecordSmall.DataRecords.parseDelimitedFrom;
 
 /** Ins Begin of ++spu
  * Created by sourav on 8/4/17.
@@ -96,10 +108,64 @@ class GetJSONTask extends AsyncTask<String, Void, Boolean> {
 // Ins Begin of spu
             HttpEntity entity = response.getEntity();
             InputStream inputStream =  entity.getContent();
+
+            // Ins Begin Added code for protocol buffers
+
+//            byte[] bytes = IOUtils.toByteArray(inputStream);
+//            buildEntriesDataBytes2(bytes, entryList);
+            // Initialize Code for Protocol Buffers
+
+            CodedInputStream codedInputStream = CodedInputStream.newInstance(inputStream);
+            while(!codedInputStream.isAtEnd()){
+                int bytesToRead = codedInputStream.readInt32();
+                byte[] bytes = codedInputStream.readRawBytes(bytesToRead);
+                buildEntriesDataBytes(bytes, entryList);
+            }
+//            DataRecordSmall.DataRecords dataRecord = null;
+//            while(true){
+//                try {
+//                    dataRecord = parseDelimitedFrom(inputStream);
+//                    entryList.add(buildEntriesDataGPB(dataRecord, new Entry()));
+//                }
+//                catch (Exception e){
+//                    e.printStackTrace();
+//                    break;
+//                }
+//
+//            }
+
+
+//            while((bytesToRead = inputStream.read()) != -1){
+//                byte [] bytes = new byte[bytesToRead];
+//                inputStream.read(bytes, 0,bytesToRead);
+//                buildEntriesDataBytes(bytes, entryList);
+//            }
+
+            // Initialize Code for Protocol Buffers
+//            int bytesCounter = 0;
+//            int bufAvail;
+//            while((bufAvail = buf.available()) > 0){
+//                int bytesToRead = buf.read();
+//                byte [] bytes = new byte[bytesToRead];
+//                buf.read(bytes, bytesCounter+1, bytesToRead);
+//                bytesCounter += bytesToRead +1;
+//                buildEntriesDataBytes(bytes, entryList);
+//            }
+            inputStream.close();
+
+//            byte[] bytes = IOUtils.toByteArray(inputStream);
+//            byte [] subArray = Arrays.copyOfRange(bytes, 1, 33);
+//            DataRecordSmall.DataRecords dataRecord = DataRecordSmall.DataRecords.parseFrom(subArray);
+            // Ins End Added code for protocol buffers
+
+
             //create JsonParser object
-            ObjectMapper mapper = new ObjectMapper();
-            JsonParser jsonParser = mapper.getFactory().createParser(inputStream);
-            buildEntriesData(jsonParser, entryList);
+
+            // Commented for Jackson Json
+//            ObjectMapper mapper = new ObjectMapper();
+//            JsonParser jsonParser = mapper.getFactory().createParser(inputStream);
+//            buildEntriesData(jsonParser, entryList);
+            // Commented for Jackson Json
 
 // Ins End of spu
 
@@ -236,6 +302,61 @@ class GetJSONTask extends AsyncTask<String, Void, Boolean> {
         }
 
     }
+    // Build Entries for protocol Buffers
+    public void buildEntriesDataBytes(byte[] bytes, ArrayList<Entry> entryList){
+
+        try {
+            DataRecordSmall.DataRecords dataRecord = DataRecordSmall.DataRecords.parseFrom(bytes);
+
+            Entry entry = new Entry();
+
+            entry.network_type = dataRecord.getNETWORKTYPEValue();
+            entry.dbm = dataRecord.getSIGNALDBM();
+            entry.networkCellType = dataRecord.getNETWORKCELLTYPEValue();
+            entry.coordinate = new Coordinate(dataRecord.getFUSEDLAT(), dataRecord.getFUSEDLONG());
+            entry.timestamp = dataRecord.getTIMESTAMP();
+
+            entryList.add(entry);
+
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    // Build Entries for protocol Buffers
+    public void buildEntriesDataBytes2(byte[] bytes, ArrayList<Entry> entryList){
+
+        try {
+            DataRecordSmall2.DataRecords2 dataRecord = DataRecordSmall2.DataRecords2.parseFrom(bytes);
+
+            List<DataRecordSmall2.DataEntries> dataEntries = dataRecord.getENTRYList();
+
+            for(int i =0; i<dataEntries.size(); i++){
+                Entry entry = new Entry();
+
+
+
+                entryList.add(entry);
+            }
+
+
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public Entry buildEntriesDataGPB(DataRecordSmall.DataRecords dataRecord, Entry entry){
+
+        entry.network_type = dataRecord.getNETWORKTYPEValue();
+        entry.dbm = dataRecord.getSIGNALDBM();
+        entry.networkCellType = dataRecord.getNETWORKCELLTYPEValue();
+        entry.coordinate = new Coordinate(dataRecord.getFUSEDLAT(), dataRecord.getFUSEDLONG());
+        entry.timestamp = dataRecord.getTIMESTAMP();
+        return entry;
+    }
+
 
     private String genHash(String input) throws NoSuchAlgorithmException
     {

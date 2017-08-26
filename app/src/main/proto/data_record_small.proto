@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+option java_package = "edu.buffalo.cse.ubwins.cellmon";
+
+//message DataEntry {
+//
+//}
+
+message DataRecords {
+    //    string IMEI_HASH = 1;
+    //    repeated DataEntry ENTRY = 2;
+
+    /* Timestamp */
+    uint64 TIMESTAMP = 1;
+
+    /* Location */
+    double FUSED_LAT = 2;
+    double FUSED_LONG = 3;
+
+    /* https://developer.android.com/reference/android/telephony/TelephonyManager.html */
+    enum NetType {
+        NETWORK_TYPE_UNKNOWN = 0;
+        NETWORK_TYPE_GPRS = 1;
+        NETWORK_TYPE_EDGE = 2;
+        NETWORK_TYPE_UMTS = 3;
+        NETWORK_TYPE_HSDPA = 4;
+        NETWORK_TYPE_HSUPA = 5;
+        NETWORK_TYPE_HSPA = 6;
+        NETWORK_TYPE_CDMA = 7;
+        NETWORK_TYPE_EVDO_0 = 8;
+        NETWORK_TYPE_EVDO_A = 9;
+        NETWORK_TYPE_EVDO_B = 10;
+        NETWORK_TYPE_1xRTT = 11;
+        NETWORK_TYPE_IDEN = 12;
+        NETWORK_TYPE_LTE = 13;
+        NETWORK_TYPE_EHRPD = 14;
+        NETWORK_TYPE_HSPAP = 15;
+        NETWORK_TYPE_GSM = 16;
+        NETWORK_TYPE_TD_SCDMA = 17;
+        NETWORK_TYPE_IWLAN = 18;
+    }
+    NetType NETWORK_TYPE = 4;
+
+    /* https://developer.android.com/reference/android/telephony/TelephonyManager.html#getAllCellInfo() */
+    enum CellType {
+        GSM = 0;
+        CDMA = 1;
+        WCDMA = 2;
+        LTE = 3;
+    }
+    CellType NETWORK_CELL_TYPE = 5;
+
+    sint32 SIGNAL_DBM = 6;
+}
